@@ -1,52 +1,69 @@
-# TakeMeter — discourse quality classifier (r/nba)
+# TakeMeter
 
-This repo contains the planning and tooling for the TakeMeter project: a fine-tuned classifier that distinguishes `analysis`, `hot_take`, and `reaction` in r/nba posts and comments.
+TakeMeter is a text classification project for baseball discussion. It labels short Reddit-style posts into three categories:
 
-Files
-- [planning.md](planning.md) — design decisions, labels, edge cases, and AI tool plan.
-- [data/takemeter_labeled.csv](data/takemeter_labeled.csv) — labeled dataset (CSV with `text,label,notes,source_community`).
-- `notebook/takemeter_starter.ipynb` — Colab-ready starter notebook with train/eval pipeline (use the official starter notebook recommended in the course for Groq baseline).
-- `scripts/collect_reddit.py` — helper script to download public posts/comments from Reddit into CSV.
-- `requirements.txt` — python deps for local experimentation.
+- `reflective`
+- `help_seeking`
+- `blame_or_venting`
 
-Quick start
+The repository is prepared for submission with a Colab-first training workflow, preprocessing scripts, evaluation scripts, and a synthetic 200-example smoke-test dataset for development when live collection is blocked.
 
-1. Prepare data: fill `data/takemeter_labeled.csv` with at least 200 labeled examples (see `planning.md`).
-2. Open the Colab starter notebook (recommended: copy the course's Colab starter and follow runtime instructions) or run `notebook/takemeter_starter.ipynb` in Colab.
-3. Add your Groq API key in Colab secrets for the zero-shot baseline, and run Sections 1–2 before running baseline or fine-tuning.
+## What is included
 
-Data collection (script)
+- [planning.md](planning.md) - taxonomy, annotation rules, and project plan
+- [SUBMISSION.md](SUBMISSION.md) - submission checklist and run instructions
+- [data/takemeter_labeled.csv](data/takemeter_labeled.csv) - labeled CSV template
+- [data/takemeter_synthetic_200.csv](data/takemeter_synthetic_200.csv) - synthetic development dataset
+- [data/train.csv](data/train.csv) and [data/val.csv](data/val.csv) - cleaned train/validation splits
+- [notebook/takemeter_colab.ipynb](notebook/takemeter_colab.ipynb) - Colab notebook for install, upload, train, predict, and evaluate
+- [notebook/takemeter_starter.ipynb](notebook/takemeter_starter.ipynb) - original starter notebook
+- [scripts/collect_reddit.py](scripts/collect_reddit.py) - Reddit collector using PRAW
+- [scripts/collect_reddit_noauth.py](scripts/collect_reddit_noauth.py) - Reddit collector using public JSON
+- [scripts/generate_synthetic.py](scripts/generate_synthetic.py) - synthetic data generator
+- [scripts/preprocess_and_split.py](scripts/preprocess_and_split.py) - cleaning and split script
+- [scripts/quick_train.py](scripts/quick_train.py) - 1-epoch DistilBERT smoke test
+- [scripts/predict.py](scripts/predict.py) - inference script
+- [scripts/evaluate.py](scripts/evaluate.py) - metric and confusion-matrix script
+- [requirements.txt](requirements.txt) and [requirements-submission.txt](requirements-submission.txt)
 
-The included `scripts/collect_reddit.py` uses `praw` to fetch posts/comments. Create a Reddit app and set `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, and `REDDIT_USER_AGENT` in your environment before running.
+## Data format
 
-Evaluation and submission
+The labeled CSV uses this header:
 
-When training is done, download `evaluation_results.json` and `confusion_matrix.png` from Colab and commit them to the repo. Put the demo video in the repo (or include an external link) and document results in this README: overall accuracy for both models, per-class metrics, confusion matrix (as markdown table), 3 analyzed failure cases, and sample classifications.
-# ai201-project3-takemeter
-TakeMeter: Coachability Meter for Baseball Discussions
+```csv
+text,label,notes,source_community
+```
 
-A fine-tuned text classifier that categorizes baseball-related online discussion into:
+`text` is the Reddit post/comment text, `label` is one of the three target classes, `notes` is optional annotation context, and `source_community` stores the subreddit name.
 
-- reflective
+## Recommended workflow
 
-- help_seeking
+1. Open [notebook/takemeter_colab.ipynb](notebook/takemeter_colab.ipynb) in Google Colab.
+2. Switch the runtime to GPU.
+3. Install dependencies in the notebook.
+4. Upload `data/takemeter_labeled.csv` or use Google Drive to mount the repo.
+5. Run preprocessing, training, prediction, and evaluation cells in order.
+6. Download `outputs/` and `results/` after evaluation.
 
-- blame_or_venting
+## Local scripts
 
-The project uses public Reddit baseball discussions and compares a fine-tuned DistilBERT classifier with a zero-shot Groq LLM baseline.
+If you are running locally in an environment with the required packages installed:
 
-## Project Status
+```bash
+python3 scripts/preprocess_and_split.py
+python3 scripts/quick_train.py
+python3 scripts/predict.py
+python3 scripts/evaluate.py --preds outputs/predictions.csv --gold data/val.csv --out results/metrics.json
+```
 
-- [x] Community and label taxonomy selected
+## Notes
 
-- [x] Initial planning document created
+- Reddit collection can be blocked by network policy. In that case, use the synthetic dataset for smoke testing or upload a pre-collected CSV.
+- The repository currently includes a Colab pipeline and supporting scripts so the submission can be reproduced end to end.
 
-- [ ] Dataset collection and annotation
+## Repository status
 
-- [ ] Zero-shot baseline evaluation
-
-- [ ] DistilBERT fine-tuning
-
-- [ ] Final evaluation report
-
-- [ ] Demo video
+- Project scaffold: complete
+- Colab pipeline: complete
+- Synthetic smoke-test data: complete
+- Final training/evaluation on real Reddit data: pending when data is available
